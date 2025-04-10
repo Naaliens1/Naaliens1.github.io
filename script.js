@@ -1,19 +1,21 @@
 const API_KEY = '8725bd34101434452b1101972e010c72'; // Clave API de GNews
-const CACHE_DURATION = 3600000; // 1 hora en milisegundos
+const CACHE_DURATION = 600000; // 10 minutos en milisegundos
+const GOOGLE_TRANSLATE_API_KEY = 'TU_CLAVE_API_GOOGLE_TRANSLATE'; // Reemplaza con tu clave de Google Translate
 
 const categories = [
-    { name: 'cannabis-medicine', query: 'cannabis medicine OR cannabis medical' },
-    { name: 'cannabis-legislation', query: 'cannabis legislation OR cannabis law' },
-    { name: 'dentistry-materials', query: 'dentistry materials OR dental materials' },
-    { name: 'dentistry-techniques', query: 'dentistry techniques OR dental techniques' }
+    { name: 'medicine', query: 'cannabis medicine OR cannabis medical', subcategories: [
+        { name: 'odontologia-materiales', query: 'cannabis dentistry materials' },
+        { name: 'odontologia-tecnicas', query: 'cannabis dentistry techniques' }
+    ]},
+    { name: 'legislation', query: 'cannabis legislation OR cannabis law', subcategories: [] }
 ];
 
-async function fetchNews() {
+async function fetchNews(language = 'es', fromDate = '', toDate = '', sortBy = 'publishedAt') {
     const errorContainer = document.getElementById('error-message');
     const newsContainer = document.getElementById('news-container');
-    errorContainer.innerHTML = ''; // Limpiar errores previos
+    errorContainer.innerHTML = '';
+    newsContainer.innerHTML = '<div class="loader"></div>';
 
-    // Verificar caché
     const cachedData = localStorage.getItem('newsData');
     const cachedTimestamp = localStorage.getItem('newsTimestamp');
     if (cachedData && cachedTimestamp && Date.now() - cachedTimestamp < CACHE_DURATION) {
@@ -22,47 +24,64 @@ async function fetchNews() {
 
     const allNews = [];
     for (const category of categories) {
-        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(category.query)}&lang=es,en&max=10&apikey=${API_KEY}`;
+        let url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(category.query)}&lang=${language}&max=20&sortby=${sortBy}&apikey=${API_KEY}`;
+        if (fromDate) url += `&from=${fromDate}`;
+        if (toDate) url += `&to=${toDate}`;
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout de 5 segundos
-            const response = await fetch(url, { signal: controller.signal });
-            clearTimeout(timeoutId);
-
+            const response = await fetch(url);
             const data = await response.json();
             if (data.articles) {
-                if (data.articles.length === 0) {
-                    errorContainer.classList.remove('hidden');
-                    errorContainer.innerHTML += `<p>No se encontraron noticias para ${category.name}.</p>`;
-                }
                 data.articles.forEach(article => {
                     if (article.title && article.url) {
                         allNews.push({
                             title: article.title,
-                            description: article.description || 'No description available.',
+                            description: article.description || 'Sin descripción disponible.',
                             url: article.url,
-                            source: article.source?.name || 'Unknown Source',
+                            source: article.source?.name || 'Fuente desconocida',
                             publishedAt: article.publishedAt || new Date().toISOString(),
                             category: category.name,
-                            image: article.image || 'https://via.placeholder.com/300x150?text=No+Image' // Imagen por defecto si no hay
+                            subcategory: null,
+                            image: article.image || 'https://via.placeholder.com/300x150?text=Sin+Imagen',
+                            originalLanguage: article.language || 'en'
                         });
                     }
                 });
-            } else {
-                throw new Error(data.errors?.join(', ') || 'Error desconocido de GNews API');
             }
         } catch (error) {
-            console.error(`Error fetching ${category.name}:`, error);
             errorContainer.classList.remove('hidden');
             errorContainer.innerHTML += `<p>Error al cargar ${category.name}: ${error.message}</p>`;
         }
-    }
 
-    if (allNews.length === 0) {
-        errorContainer.classList.remove('hidden');
-        errorContainer.innerHTML += '<p>No se encontraron noticias para ninguna categoría. Verifica tu conexión o intenta de nuevo más tarde.</p>';
-        newsContainer.innerHTML = '';
-        return [];
+        // Subcategorías
+        for (const subcat of category.subcategories) {
+            url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(subcat.query)}&lang=${language}&max=20&sortby=${sortBy}&apikey=${API_KEY}`;
+            if (fromDate) url += `&from=${fromDate}`;
+            if (toDate) url += `&to=${toDate}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.articles) {
+                    data.articles.forEach(article => {
+                        if (article.title && article.url) {
+                            allNews.push({
+                                title: article.title,
+                                description: article.description || 'Sin descripción disponible.',
+                                url: article.url,
+                                source: article.source?.name || 'Fuente desconocida',
+                                publishedAt: article.publishedAt || new Date().toISOString(),
+                                category: category.name,
+                                subcategory: subcat.name,
+                                image: article.image || 'https://via.placeholder.com/300x150?text=Sin+Imagen',
+                                originalLanguage: article.language || 'en'
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                errorContainer.classList.remove('hidden');
+                errorContainer.innerHTML += `<p>Error al cargar ${subcat.name}: ${error.message}</p>`;
+            }
+        }
     }
 
     localStorage.setItem('newsData', JSON.stringify(allNews));
@@ -70,28 +89,56 @@ async function fetchNews() {
     return allNews;
 }
 
-function renderNews(articles) {
+async function translateText(text, targetLanguage) {
+    if (!GOOGLE_TRANSLATE_API_KEY) {
+        console.error('Clave API de Google Translate no configurada.');
+        return text;
+    }
+    try {
+        const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_TRANSLATE_API_KEY}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                q: text,
+                target: targetLanguage
+            })
+        });
+        const data = await response.json();
+        return data.data.translations[0].translatedText;
+    } catch (error) {
+        console.error('Error translating text:', error);
+        return text;
+    }
+}
+
+async function renderNews(articles, selectedLanguage) {
     const container = document.getElementById('news-container');
     container.innerHTML = '';
     if (articles.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 text-center">No hay noticias disponibles en este momento.</p>';
+        container.innerHTML = '<p class="text-gray-400 text-center">No hay noticias disponibles en este momento.</p>';
         return;
     }
-    articles.forEach(article => {
+    for (const article of articles) {
+        let description = article.description;
+        if (article.originalLanguage === 'en' && selectedLanguage === 'es') {
+            description = await translateText(article.description, 'es');
+        }
         const div = document.createElement('div');
-        div.classList.add('news-card', 'bg-white', 'rounded-lg', 'shadow-lg', 'overflow-hidden', 'transform', 'transition', 'hover:scale-105', 'duration-300');
+        div.classList.add('news-card', 'bg-gray-800', 'rounded-lg', 'shadow-lg', 'overflow-hidden', 'transform', 'transition', 'hover:scale-105', 'duration-300');
         div.dataset.category = article.category;
+        div.dataset.subcategory = article.subcategory || '';
         div.innerHTML = `
-            <img src="${article.image}" alt="${article.title}" class="w-full h-48 object-cover">
+            <img src="${article.image}" alt="${article.title}" class="w-full h-48 object-cover" loading="lazy">
             <div class="p-4">
-                <h2 class="text-xl font-semibold text-gray-800 mb-2">${article.title}</h2>
-                <p class="text-gray-600 mb-3">${article.description}</p>
-                <p class="text-sm text-gray-500 mb-3">Source: ${article.source} | Published: ${new Date(article.publishedAt).toLocaleDateString()}</p>
-                <a href="${article.url}" target="_blank" class="text-blue-500 hover:underline">Read more</a>
+                <h2 class="text-xl font-semibold text-white mb-2">${article.title}</h2>
+                <p class="text-gray-300 mb-3">${description}</p>
+                <p class="text-sm text-gray-400 mb-3">Fuente: ${article.source} | Publicado: ${new Date(article.publishedAt).toLocaleDateString()}</p>
+                <a href="${article.url}" target="_blank" class="text-blue-400 hover:underline">Leer más</a>
+                ${article.originalLanguage === 'en' ? '<span class="text-yellow-400 ml-2">[ENG]</span>' : ''}
+                ${article.subcategory ? `<p class="text-sm text-gray-500">Subcategoría: ${article.subcategory}</p>` : ''}
             </div>
         `;
         container.appendChild(div);
-    });
+    }
 }
 
 function filterNews(category) {
@@ -119,20 +166,36 @@ function searchNews(query) {
     });
 }
 
+async function loadNews() {
+    const language = document.getElementById('language-select').value;
+    const fromDate = document.getElementById('date-from').value;
+    const toDate = document.getElementById('date-to').value;
+    const sortBy = document.getElementById('search-bar').value ? 'relevance' : 'publishedAt';
+    const news = await fetchNews(language, fromDate, toDate, sortBy);
+    renderNews(news, language);
+}
+
+setInterval(loadNews, CACHE_DURATION);
+
 async function init() {
-    const news = await fetchNews();
-    renderNews(news);
+    loadNews();
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             filterNews(btn.dataset.category);
-            // Resaltar botón activo
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('bg-blue-600'));
             btn.classList.add('bg-blue-600');
         });
     });
 
-    document.getElementById('search-bar').addEventListener('input', (e) => searchNews(e.target.value));
+    document.getElementById('search-bar').addEventListener('input', (e) => {
+        searchNews(e.target.value);
+        if (e.target.value) loadNews(); // Recargar con relevancia si se busca
+    });
+    document.getElementById('refresh-button').addEventListener('click', loadNews);
+    document.getElementById('language-select').addEventListener('change', loadNews);
+    document.getElementById('date-from').addEventListener('change', loadNews);
+    document.getElementById('date-to').addEventListener('change', loadNews);
 }
 
 init();
