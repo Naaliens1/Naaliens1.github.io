@@ -1,4 +1,4 @@
-const API_KEY = '75f4e7e6c419452cb8874c1201750deb'; // Clave API ya reemplazada
+const API_KEY = '75f4e7e6c419452cb8874c1201750deb'; // Clave API
 const CACHE_DURATION = 3600000; // 1 hora en milisegundos
 
 const categories = [
@@ -11,6 +11,7 @@ const categories = [
 async function fetchNews() {
     const errorContainer = document.getElementById('error-message');
     const newsContainer = document.getElementById('news-container');
+    errorContainer.innerHTML = ''; // Limpiar errores previos
 
     // Verificar caché
     const cachedData = localStorage.getItem('newsData');
@@ -21,7 +22,7 @@ async function fetchNews() {
 
     const allNews = [];
     for (const category of categories) {
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(category.query)}&apiKey=${API_KEY}&pageSize=10`;
+        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(category.query)}&language=es,en&apiKey=${API_KEY}&pageSize=10`;
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout de 5 segundos
@@ -30,8 +31,11 @@ async function fetchNews() {
 
             const data = await response.json();
             if (data.status === 'ok') {
+                if (data.articles.length === 0) {
+                    errorContainer.classList.remove('hidden');
+                    errorContainer.innerHTML += `<p>No se encontraron noticias para ${category.name}.</p>`;
+                }
                 data.articles.forEach(article => {
-                    // Validar datos del artículo
                     if (article.title && article.url) {
                         allNews.push({
                             title: article.title,
@@ -55,7 +59,7 @@ async function fetchNews() {
 
     if (allNews.length === 0) {
         errorContainer.classList.remove('hidden');
-        errorContainer.innerHTML = '<p>No se pudieron cargar noticias. Verifica tu clave API o conexión a internet.</p>';
+        errorContainer.innerHTML += '<p>No se encontraron noticias para ninguna categoría. Verifica tu conexión o intenta de nuevo más tarde.</p>';
         newsContainer.innerHTML = '';
         return [];
     }
