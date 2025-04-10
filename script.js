@@ -1,4 +1,4 @@
-const API_KEY = '75f4e7e6c419452cb8874c1201750deb'; // Clave API
+const API_KEY = '8725bd34101434452b1101972e010c72'; // Clave API de GNews
 const CACHE_DURATION = 3600000; // 1 hora en milisegundos
 
 const categories = [
@@ -22,7 +22,7 @@ async function fetchNews() {
 
     const allNews = [];
     for (const category of categories) {
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(category.query)}&language=es,en&apiKey=${API_KEY}&pageSize=10`;
+        const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(category.query)}&lang=es,en&max=10&apikey=${API_KEY}`;
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout de 5 segundos
@@ -30,7 +30,7 @@ async function fetchNews() {
             clearTimeout(timeoutId);
 
             const data = await response.json();
-            if (data.status === 'ok') {
+            if (data.articles) {
                 if (data.articles.length === 0) {
                     errorContainer.classList.remove('hidden');
                     errorContainer.innerHTML += `<p>No se encontraron noticias para ${category.name}.</p>`;
@@ -48,7 +48,7 @@ async function fetchNews() {
                     }
                 });
             } else {
-                throw new Error(data.message || 'Error desconocido de NewsAPI');
+                throw new Error(data.errors?.join(', ') || 'Error desconocido de GNews API');
             }
         } catch (error) {
             console.error(`Error fetching ${category.name}:`, error);
