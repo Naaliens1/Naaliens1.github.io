@@ -5,86 +5,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BuscaCanna</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
-            color: #fff;
-            min-height: 100vh;
-            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: #f9fafb;
+            color: #1f2937;
         }
         header {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            padding: 1rem 0;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 1.5rem 0;
+            text-align: center;
         }
         .filter-btn {
-            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            transition: transform 0.2s ease, background-color 0.2s ease;
         }
         .filter-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-        .news-card {
-            opacity: 0;
-            animation: fadeIn 0.5s ease forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .chile-category {
-            background: linear-gradient(90deg, #0039a6 0%, #ffffff 50%, #d52b1e 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: bold;
+            transform: scale(1.05);
         }
         .chile-btn {
-            background: linear-gradient(90deg, #0039a6 0%, #ffffff 50%, #d52b1e 100%);
-            color: #000;
-            font-weight: bold;
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+        .news-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .news-card:hover {
+            transform: translateY(-4px);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .translate-toggle {
+            font-size: 0.65rem;
+            color: #3b82f6;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        .language-badge {
+            background: #e5e7eb;
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.65rem;
+            color: #6b7280;
+        }
+        .keyword-tag {
+            transition: background-color 0.2s ease;
+        }
+        .keyword-tag:hover {
+            background-color: #d1d5db;
         }
     </style>
 </head>
 <body>
-    <header class="text-center">
-        <h1 class="text-4xl font-bold">BuscaCanna</h1>
-        <p class="text-gray-400 mt-2">Noticias sobre cannabis y salud</p>
+    <header>
+        <h1 class="text-2xl font-semibold">BuscaCanna</h1>
     </header>
-    <nav class="p-4 flex flex-wrap justify-center gap-3">
-        <button class="filter-btn bg-blue-500 text-white px-6 py-2 rounded-full" data-category="all">Todas</button>
-        <button class="filter-btn bg-blue-500 text-white px-6 py-2 rounded-full" data-category="medicine">Medicina</button>
-        <button class="filter-btn bg-blue-500 text-white px-6 py-2 rounded-full" data-category="legislation">Legislaciones</button>
-        <button class="filter-btn chile-btn px-6 py-2 rounded-full" data-category="chile">Cannabis en <span class="chile-category">Chile</span></button>
+    <nav class="flex justify-center gap-3 py-6">
+        <button class="filter-btn bg-gray-700 text-white" data-category="all">Todas</button>
+        <button class="filter-btn bg-gray-700 text-white" data-category="medicine">Medicina</button>
+        <button class="filter-btn bg-gray-700 text-white" data-category="legislation">Legislación</button>
+        <button class="filter-btn chile-btn" data-category="chile">
+            <img src="https://flagcdn.com/16x12/cl.png" alt="Chile" class="w-4 h-3 mr-1"> Chile
+        </button>
     </nav>
-    <div class="p-4 max-w-3xl mx-auto flex flex-wrap gap-4 justify-center">
-        <select id="language-select" class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700">
-            <option value="es">Español</option>
-            <option value="en">English</option>
+    <div class="max-w-4xl mx-auto px-4 py-4 flex flex-wrap gap-3 justify-center items-center">
+        <div class="relative flex-grow max-w-md">
+            <input id="search-bar" type="text" placeholder="Buscar noticias..." class="w-full p-2.5 rounded-lg bg-white text-gray-800 border border-gray-200 shadow-sm">
+            <span class="absolute right-2.5 top-2.5 text-gray-400">🔍</span>
+        </div>
+        <select id="date-filter" class="p-2 rounded-lg bg-white text-gray-800 border border-gray-200 shadow-sm">
+            <option value="">Todo el tiempo</option>
+            <option value="24h">Últimas 24 horas</option>
+            <option value="week">Última semana</option>
+            <option value="month">Último mes</option>
         </select>
-        <input type="date" id="date-from" class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700">
-        <input type="date" id="date-to" class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700">
-        <button id="refresh-button" class="bg-green-500 text-white px-4 py-2 rounded-full">Actualizar</button>
-        <input id="search-bar" type="text" placeholder="Buscar..." class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-700">
+        <button id="relevance-toggle" class="bg-white text-gray-800 px-3 py-2 rounded-lg border border-gray-200 shadow-sm">Más reciente</button>
     </div>
-    <div id="error-message" class="p-4 text-red-400 text-center hidden"></div>
-    <main id="news-container" class="p-4 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="loader"></div>
+    <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap gap-2 justify-center">
+        <span class="keyword-tag bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full cursor-pointer">dental</span>
+        <span class="keyword-tag bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full cursor-pointer">prótesis</span>
+        <span class="keyword-tag bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full cursor-pointer">thc</span>
+        <span class="keyword-tag bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full cursor-pointer">cbd</span>
+        <span class="keyword-tag bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full cursor-pointer">periodontitis</span>
+    </div>
+    <main id="news-container" class="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Noticias aquí -->
     </main>
     <script src="script.js"></script>
 </body>
