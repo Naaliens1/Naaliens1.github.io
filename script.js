@@ -43,7 +43,8 @@ async function fetchNews() {
                             url: article.url,
                             source: article.source?.name || 'Unknown Source',
                             publishedAt: article.publishedAt || new Date().toISOString(),
-                            category: category.name
+                            category: category.name,
+                            image: article.image || 'https://via.placeholder.com/300x150?text=No+Image' // Imagen por defecto si no hay
                         });
                     }
                 });
@@ -73,18 +74,21 @@ function renderNews(articles) {
     const container = document.getElementById('news-container');
     container.innerHTML = '';
     if (articles.length === 0) {
-        container.innerHTML = '<p>No hay noticias disponibles en este momento.</p>';
+        container.innerHTML = '<p class="text-gray-500 text-center">No hay noticias disponibles en este momento.</p>';
         return;
     }
     articles.forEach(article => {
         const div = document.createElement('div');
-        div.classList.add('bg-white', 'p-4', 'rounded', 'shadow');
+        div.classList.add('news-card', 'bg-white', 'rounded-lg', 'shadow-lg', 'overflow-hidden', 'transform', 'transition', 'hover:scale-105', 'duration-300');
         div.dataset.category = article.category;
         div.innerHTML = `
-            <h2 class="text-xl font-bold">${article.title}</h2>
-            <p class="text-gray-600">${article.description}</p>
-            <p class="text-sm text-gray-500">Source: ${article.source} | Published: ${new Date(article.publishedAt).toLocaleDateString()}</p>
-            <a href="${article.url}" target="_blank" class="text-blue-500">Read more</a>
+            <img src="${article.image}" alt="${article.title}" class="w-full h-48 object-cover">
+            <div class="p-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-2">${article.title}</h2>
+                <p class="text-gray-600 mb-3">${article.description}</p>
+                <p class="text-sm text-gray-500 mb-3">Source: ${article.source} | Published: ${new Date(article.publishedAt).toLocaleDateString()}</p>
+                <a href="${article.url}" target="_blank" class="text-blue-500 hover:underline">Read more</a>
+            </div>
         `;
         container.appendChild(div);
     });
@@ -120,7 +124,12 @@ async function init() {
     renderNews(news);
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => filterNews(btn.dataset.category));
+        btn.addEventListener('click', () => {
+            filterNews(btn.dataset.category);
+            // Resaltar botón activo
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('bg-blue-600'));
+            btn.classList.add('bg-blue-600');
+        });
     });
 
     document.getElementById('search-bar').addEventListener('input', (e) => searchNews(e.target.value));
