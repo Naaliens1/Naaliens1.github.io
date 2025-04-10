@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Noticias Cannabis y Odontología</title>
+    <title>BuscaCanna</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         body {
@@ -19,6 +19,7 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            padding: 20px 0;
         }
         .filter-btn {
             transition: all 0.3s ease;
@@ -35,33 +36,51 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        #search-bar {
+        #search-bar, #date-from, #date-to {
             transition: all 0.3s ease;
         }
-        #search-bar:focus {
+        #search-bar:focus, #date-from:focus, #date-to:focus {
             transform: scale(1.02);
             box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <header class="p-6 text-center">
-        <h1 class="text-4xl font-bold tracking-tight">Noticias Cannabis y Odontología</h1>
-        <p class="text-gray-400 mt-2">Explora las últimas noticias sobre cannabis y odontología</p>
+    <header class="text-center">
+        <h1 class="text-5xl font-bold tracking-tight">BuscaCanna</h1>
+        <p class="text-gray-400 mt-2">Explora las últimas noticias sobre cannabis y salud</p>
     </header>
     <nav class="p-4 flex flex-wrap justify-center gap-3">
         <button class="filter-btn bg-blue-500 text-white px-6 py-3 rounded-full font-medium" data-category="all">Todas</button>
-        <button class="filter-btn bg-blue-500 text-white px-6 py-3 rounded-full font-medium" data-category="cannabis-medicine">Cannabis - Medicina</button>
-        <button class="filter-btn bg-blue-500 text-white px-6 py-3 rounded-full font-medium" data-category="cannabis-legislation">Cannabis - Legislación</button>
-        <button class="filter-btn bg-blue-500 text-white px-6 py-3 rounded-full font-medium" data-category="dentistry-materials">Odontología - Materiales</button>
-        <button class="filter-btn bg-blue-500 text-white px-6 py-3 rounded-full font-medium" data-category="dentistry-techniques">Odontología - Técnicas</button>
+        <button class="filter-btn bg-blue-500 text-white px-6 py-3 rounded-full font-medium" data-category="medicine">Medicina</button>
+        <button class="filter-btn bg-blue-500 text-white px-6 py-3 rounded-full font-medium" data-category="legislation">Legislaciones</button>
     </nav>
-    <div class="p-4 max-w-3xl mx-auto">
-        <input id="search-bar" type="text" placeholder="Buscar noticias..." class="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500">
+    <div class="p-4 max-w-3xl mx-auto flex flex-wrap gap-4 justify-center items-center">
+        <select id="language-select" class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+        </select>
+        <input type="date" id="date-from" class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700">
+        <input type="date" id="date-to" class="p-2 rounded-lg bg-gray-800 text-white border border-gray-700">
+        <button id="refresh-button" class="bg-green-500 text-white px-4 py-2 rounded-full font-medium">Actualizar</button>
+        <input id="search-bar" type="text" placeholder="Buscar noticias..." class="flex-grow p-3 rounded-lg bg-gray-800 text-white border border-gray-700">
     </div>
     <div id="error-message" class="p-4 text-red-400 text-center hidden"></div>
     <main id="news-container" class="p-4 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <p class="text-gray-400 text-center col-span-full">Cargando noticias...</p>
+        <div class="loader"></div>
     </main>
     <script src="script.js"></script>
 </body>
