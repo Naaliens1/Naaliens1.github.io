@@ -67,6 +67,11 @@
         .keyword-tag:hover {
             background-color: #d1d5db;
         }
+        /* Estilos opcionales para el botón activo */
+        .filter-btn.active {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -75,7 +80,7 @@
     </header>
     <nav class="flex justify-center gap-3 py-6">
         <button class="filter-btn bg-gray-700 text-white" data-category="all">Todas</button>
-        <button class="filter-btn bg-gray-700 text-white" data-category="medicine">Medicina</button>
+        <button class="filter-btn bg-gray-700 text-white" data-category="salud">Salud</button>
         <button class="filter-btn bg-gray-700 text-white" data-category="legislation">Legislación</button>
         <button class="filter-btn chile-btn" data-category="chile">
             <img src="https://flagcdn.com/16x12/cl.png" alt="Chile" class="w-4 h-3 mr-1"> Chile
@@ -83,7 +88,7 @@
     </nav>
     <div class="max-w-4xl mx-auto px-4 py-4 flex flex-wrap gap-3 justify-center items-center">
         <div class="relative flex-grow max-w-md">
-            <input id="search-bar" type="text" placeholder="Buscar noticias..." class="w-full p-2.5 rounded-lg bg-white text-gray-800 border border-gray-200 shadow-sm">
+            <input id="search-bar" type="text" placeholder="Buscar noticias de cannabis y salud..." class="w-full p-2.5 rounded-lg bg-white text-gray-800 border border-gray-200 shadow-sm">
             <span class="absolute right-2.5 top-2.5 text-gray-400">🔍</span>
         </div>
         <select id="date-filter" class="p-2 rounded-lg bg-white text-gray-800 border border-gray-200 shadow-sm">
